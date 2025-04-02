@@ -34,3 +34,6 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
+
+[project-urls]
+Homepage = "https://github.com/g-fabiani/django-blog"
