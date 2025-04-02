@@ -1,0 +1,10 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<h1>Elimina post</h1>
+<form action="" method="post">
+  {% csrf_token %}
+  <p>Confermi di voler eliminare il post <strong>{{ post }}</strong>?</p>
+  <input type="submit" value="Conferma" class="btn btn-danger">
+  <a href="{% url "post_detail" post.pk %}" class="btn btn-outline-primary">Annulla</a>
+</form>
+{% endblock content %}

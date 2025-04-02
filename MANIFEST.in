@@ -1,0 +1,2 @@
+recursive-include django_blog/static *
+recursive-include django_blog/templates *
