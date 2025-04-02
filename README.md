@@ -11,7 +11,7 @@ Django-blog is a Django application for publishing a blog. Supports creating pos
         'crispy_forms',
         'crispy_bootstrap5',
         'tinymce',
-        'django-blog',
+        'django_blog',
     ]
     ```
 2. Include the polls URLconf in your project urls.py:
