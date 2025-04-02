@@ -5,6 +5,6 @@
   {% csrf_token %}
   <p>Confermi di voler eliminare il post <strong>{{ post }}</strong>?</p>
   <input type="submit" value="Conferma" class="btn btn-danger">
-  <a href="{% url "post_detail" post.pk %}" class="btn btn-outline-primary">Annulla</a>
+  <a href="{% url "blog:detail" post.pk %}" class="btn btn-outline-primary">Annulla</a>
 </form>
 {% endblock content %}

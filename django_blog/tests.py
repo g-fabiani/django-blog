@@ -87,7 +87,7 @@ class PostModelTest(PostPopulatedTestCase):
 
 class PostViewEmptyTest(TestCase):
     def test_post_list_vew_url_by_name(self):
-        response = self.client.get(reverse('posts'))
+        response = self.client.get(reverse('blog:list'))
         self.assertEqual(response.status_code, 200)
 
     def post_list_view_url_location(self):
@@ -95,12 +95,12 @@ class PostViewEmptyTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_post_list_view_template(self):
-        response = self.client.get(reverse('posts'))
+        response = self.client.get(reverse('blog:list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'blog/post_list.html')
 
     def test_post_list_queryset(self):
-        response = self.client.get(reverse('posts'))
+        response = self.client.get(reverse('blog:list'))
         self.assertEqual(response.status_code, 200)
         self.assertQuerySetEqual(response.context['posts'], [])
 
@@ -112,7 +112,7 @@ class PostViewPopulatedTest(PostPopulatedTestCase):
         get_user_model().objects.create_user('test', password='test').save()
 
     def test_post_list_view_url_by_name(self):
-        response = self.client.get(reverse('posts'))
+        response = self.client.get(reverse('blog:list'))
         self.assertEqual(response.status_code, 200)
 
     def test_post_list_view_url_location(self):
@@ -120,18 +120,18 @@ class PostViewPopulatedTest(PostPopulatedTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_post_list_view_template(self):
-        response = self.client.get(reverse('posts'))
+        response = self.client.get(reverse('blog:list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'blog/post_list.html')
 
     def test_post_list_view_queryset(self):
-        response = self.client.get(reverse('posts'))
+        response = self.client.get(reverse('blog:list'))
         self.assertEqual(response.status_code, 200)
         self.assertQuerySetEqual(response.context['posts'], [self.pub_post])
 
     def test_post_list_view_auth_queryset(self):
         self.client.login(username='test', password='test')
-        response = self.client.get(reverse('posts'))
+        response = self.client.get(reverse('blog:list'))
         self.assertEqual(response.status_code , 200)
         self.assertQuerySetEqual(
             response.context['posts'],
@@ -172,36 +172,36 @@ class PostDeleteTest(MessagesTestMixin, PostPopulatedTestCase):
 
     def test_delete_view_post(self):
         self.client.force_login(self.user)
-        response = self.client.post(reverse('post_delete', kwargs={'pk': self.pub_post.pk}))
+        response = self.client.post(reverse('blog:delete', kwargs={'pk': self.pub_post.pk}))
         self.assertEqual(response.status_code, 302)
 
     def test_delete_view_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(reverse('post_delete', kwargs={'pk': self.pub_post.pk}))
+        response = self.client.get(reverse('blog:delete', kwargs={'pk': self.pub_post.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Confermi di voler eliminare il post")
 
     def test_delete_has_effect(self):
         self.assertEqual(Post.objects.count(), 3)
         self.client.force_login(self.user)
-        response = self.client.post(reverse('post_delete', kwargs={'pk': self.pub_post.pk}))
+        response = self.client.post(reverse('blog:delete', kwargs={'pk': self.pub_post.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Post.objects.count(), 2)
         self.assertRaises(Post.DoesNotExist, Post.objects.get, pk=self.pub_post.pk)
 
     def test_delete_redirect_correct_page(self):
         self.client.force_login(self.user)
-        response = self.client.post(reverse('post_delete', kwargs={'pk': self.pub_post.pk}))
-        self.assertEqual(response.url, reverse('posts'))
+        response = self.client.post(reverse('blog:delete', kwargs={'pk': self.pub_post.pk}))
+        self.assertEqual(response.url, reverse('blog:list'))
 
     def test_delete_unauth_redirects_to_login(self):
-        response = self.client.post(reverse('post_delete', kwargs={'pk': self.pub_post.pk}))
+        response = self.client.post(reverse('blog:delete', kwargs={'pk': self.pub_post.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Post.objects.count(), 3)
 
     def test_delete_message(self):
         self.client.force_login(self.user)
-        response = self.client.post(reverse('post_delete', kwargs={'pk': self.pub_post.pk}))
+        response = self.client.post(reverse('blog:delete', kwargs={'pk': self.pub_post.pk}))
         self.assertMessages(response, [Message(messages.ERROR, f"Hai eliminato il post “{self.pub_post}”")])
 
 
@@ -226,13 +226,13 @@ class PostPublishTest(MessagesTestMixin, PostPopulatedTestCase):
 
     def test_publish_view_by_name(self):
         self.client.force_login(self.user1)
-        response = self.client.post(reverse('post_publish', kwargs={'pk': self.draft_post.pk}))
+        response = self.client.post(reverse('blog:publish', kwargs={'pk': self.draft_post.pk}))
         self.assertEqual(response.status_code, 302)
 
     def test_publish_has_effect_on_draft(self):
         self.assertTrue(self.draft_post.is_draft())
         self.client.force_login(self.user1)
-        response = self.client.post(reverse('post_publish', kwargs={'pk': self.draft_post.pk}))
+        response = self.client.post(reverse('blog:publish', kwargs={'pk': self.draft_post.pk}))
         self.assertEqual(response.status_code, 302)
         post = Post.objects.get(pk=self.draft_post.pk)
         self.assertFalse(post.is_draft())
@@ -240,7 +240,7 @@ class PostPublishTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_publish_has_effect_on_future_post(self):
         self.assertFalse(self.future_post.is_published())
         self.client.force_login(self.user1)
-        response = self.client.post(reverse('post_publish', kwargs={'pk': self.future_post.pk}))
+        response = self.client.post(reverse('blog:publish', kwargs={'pk': self.future_post.pk}))
         self.assertEqual(response.status_code, 302)
         post = Post.objects.get(pk=self.future_post.pk)
         self.assertTrue(post.is_published())
@@ -248,7 +248,7 @@ class PostPublishTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_cannot_publish_published_post(self):
         self.client.force_login(self.user1)
         og_pub_date = self.pub_post.pub_date
-        response = self.client.post(reverse('post_publish', kwargs={'pk': self.pub_post.pk}))
+        response = self.client.post(reverse('blog:publish', kwargs={'pk': self.pub_post.pk}))
         self.assertEqual(response.status_code, 302)
         post = Post.objects.get(pk=self.pub_post.pk)
         self.assertEqual(og_pub_date, post.pub_date)
@@ -256,7 +256,7 @@ class PostPublishTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_can_publish_own_post(self):
         self.assertFalse(self.future_post2.is_published())
         self.client.force_login(self.user2)
-        response = self.client.post(reverse('post_publish', kwargs={'pk': self.future_post2.pk}))
+        response = self.client.post(reverse('blog:publish', kwargs={'pk': self.future_post2.pk}))
         self.assertEqual(response.status_code, 302)
         post = Post.objects.get(pk=self.future_post2.pk)
         self.assertTrue(post.is_published())
@@ -264,30 +264,30 @@ class PostPublishTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_cannot_publish_another_users_post(self):
         self.assertFalse(self.future_post2.is_published())
         self.client.force_login(self.user1)
-        response = self.client.post(reverse('post_publish', kwargs={'pk': self.future_post2.pk}))
+        response = self.client.post(reverse('blog:publish', kwargs={'pk': self.future_post2.pk}))
         self.assertEqual(response.status_code, 302)
         post = Post.objects.get(pk=self.future_post2.pk)
         self.assertFalse(post.is_published())
 
     def test_cannot_publish_another_users_post_message(self):
         self.client.force_login(self.user1)
-        response = self.client.post(reverse('post_publish', kwargs={'pk': self.future_post2.pk}))
+        response = self.client.post(reverse('blog:publish', kwargs={'pk': self.future_post2.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertMessages(response, [Message(messages.ERROR, "Non hai le autorizzazioni necessarie per pubblicare questo post")])
 
     def test_publish_redirect_correct_page(self):
         self.client.force_login(self.user1)
-        response = self.client.post(reverse('post_publish', kwargs={'pk': self.future_post.pk}))
+        response = self.client.post(reverse('blog:publish', kwargs={'pk': self.future_post.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, self.future_post.get_absolute_url())
 
     def test_publish_unauth_redirects_to_login(self):
-        response = self.client.post(reverse('post_publish', kwargs={'pk': self.future_post.pk}))
+        response = self.client.post(reverse('blog:publish', kwargs={'pk': self.future_post.pk}))
         self.assertEqual(response.status_code, 302)
 
     def test_publish_success_message(self):
         self.client.force_login(self.user1)
-        response = self.client.post(reverse('post_publish', kwargs={'pk': self.future_post.pk}))
+        response = self.client.post(reverse('blog:publish', kwargs={'pk': self.future_post.pk}))
         self.assertMessages(response, [Message(messages.SUCCESS, f"Hai pubblicato il post “{self.future_post}”")])
 
 
@@ -309,19 +309,19 @@ class PostChangeDateTest(MessagesTestMixin, PostPopulatedTestCase):
 
     def test_change_date_view_get(self):
         self.client.force_login(self.user1)
-        response = self.client.get(reverse('post_change_date', kwargs={'pk': self.draft_post.pk}))
+        response = self.client.get(reverse('blog:change_date', kwargs={'pk': self.draft_post.pk}))
         self.assertEqual(response.status_code, 200)
 
     def test_change_date_view_template(self):
         self.client.force_login(self.user1)
-        response = self.client.get(reverse('post_change_date', kwargs={'pk': self.draft_post.pk}))
+        response = self.client.get(reverse('blog:change_date', kwargs={'pk': self.draft_post.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'blog/post_change_date.html')
 
     def test_change_date_view_post(self):
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_change_date', kwargs={'pk': self.draft_post.pk}),
+            reverse('blog:change_date', kwargs={'pk': self.draft_post.pk}),
             {'pub_date': self.new_pub_date.strftime(DATEFORMAT)}
         )
         self.assertEqual(response.status_code, 302)
@@ -329,7 +329,7 @@ class PostChangeDateTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_change_date_view_post_redirect_correct_page(self):
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_change_date', kwargs={'pk': self.draft_post.pk}),
+            reverse('blog:change_date', kwargs={'pk': self.draft_post.pk}),
             {'pub_date': self.new_pub_date.strftime(DATEFORMAT)}
         )
         self.assertEqual(response.status_code, 302)
@@ -339,7 +339,7 @@ class PostChangeDateTest(MessagesTestMixin, PostPopulatedTestCase):
         self.assertTrue(self.draft_post.is_draft())
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_change_date', kwargs={'pk': self.draft_post.pk}),
+            reverse('blog:change_date', kwargs={'pk': self.draft_post.pk}),
             {'pub_date': self.new_pub_date.strftime(DATEFORMAT)}
         )
         self.assertEqual(response.status_code, 302)
@@ -350,7 +350,7 @@ class PostChangeDateTest(MessagesTestMixin, PostPopulatedTestCase):
         og_pub_date = self.future_post.pub_date;
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_change_date', kwargs={'pk': self.future_post.pk}),
+            reverse('blog:change_date', kwargs={'pk': self.future_post.pk}),
             {'pub_date': self.new_pub_date.strftime(DATEFORMAT)}
         )
         self.assertEqual(response.status_code, 302)
@@ -360,7 +360,7 @@ class PostChangeDateTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_change_date_success_message(self):
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_change_date', kwargs={'pk': self.draft_post.pk}),
+            reverse('blog:change_date', kwargs={'pk': self.draft_post.pk}),
             {'pub_date': self.new_pub_date.strftime(DATEFORMAT)}
         )
         self.assertEqual(response.status_code, 302)
@@ -369,14 +369,14 @@ class PostChangeDateTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_cannot_change_date_of_published_post(self):
         self.assertTrue(self.pub_post.is_published())
         self.client.force_login(self.user1)
-        response = self.client.get(reverse('post_change_date', kwargs={'pk': self.pub_post.pk}))
+        response = self.client.get(reverse('blog:change_date', kwargs={'pk': self.pub_post.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, self.pub_post.get_absolute_url())
 
     def test_cannot_change_date_of_published_post_message(self):
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_change_date', kwargs={'pk': self.pub_post.pk}),
+            reverse('blog:change_date', kwargs={'pk': self.pub_post.pk}),
             {'pub_date': self.new_pub_date.strftime(DATEFORMAT)}
         )
         self.assertEqual(response.status_code, 302)
@@ -386,7 +386,7 @@ class PostChangeDateTest(MessagesTestMixin, PostPopulatedTestCase):
         self.client.force_login(self.user1)
         self.assertTrue(self.draft_post2.is_draft())
         response = self.client.post(
-            reverse('post_change_date', kwargs={'pk': self.draft_post2.pk}),
+            reverse('blog:change_date', kwargs={'pk': self.draft_post2.pk}),
             {'pub_date': self.new_pub_date.strftime(DATEFORMAT)}
         )
         self.assertEqual(response.status_code, 302)
@@ -397,14 +397,14 @@ class PostChangeDateTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_cannot_change_date_of_another_users_post_message(self):
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_change_date', kwargs={'pk': self.draft_post2.pk}),
+            reverse('blog:change_date', kwargs={'pk': self.draft_post2.pk}),
             {'pub_date': self.new_pub_date.strftime(DATEFORMAT)}
         )
         self.assertEqual(response.status_code, 302)
         self.assertMessages(response, [Message(messages.ERROR, "Non hai le autorizzazioni necessarie per compiere questa operazione")])
 
     def test_change_date_unauth_redirects_to_login(self):
-        response = self.client.get(reverse('post_change_date', kwargs={'pk': self.draft_post.pk}))
+        response = self.client.get(reverse('blog:change_date', kwargs={'pk': self.draft_post.pk}))
         self.assertEqual(response.status_code, 302)
 
 
@@ -431,19 +431,19 @@ class PostUpdateTest(MessagesTestMixin, PostPopulatedTestCase):
 
     def test_update_view_get(self):
         self.client.force_login(self.user1)
-        response = self.client.get(reverse('post_update', kwargs={'pk': self.pub_post.pk}))
+        response = self.client.get(reverse('blog:update', kwargs={'pk': self.pub_post.pk}))
         self.assertEqual(response.status_code, 200)
 
     def test_update_view_template(self):
         self.client.force_login(self.user1)
-        response = self.client.get(reverse('post_update', kwargs={'pk': self.pub_post.pk}))
+        response = self.client.get(reverse('blog:update', kwargs={'pk': self.pub_post.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'blog/post_update.html')
 
     def test_update_view_post(self):
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_update', kwargs={'pk': self.pub_post.pk}),
+            reverse('blog:update', kwargs={'pk': self.pub_post.pk}),
             {
                 'title': self.pub_post.title,
                 'body': str(self.pub_post.body) + " updated"
@@ -454,7 +454,7 @@ class PostUpdateTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_update_view_post_redirect_correct_page(self):
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_update', kwargs={'pk': self.pub_post.pk}),
+            reverse('blog:update', kwargs={'pk': self.pub_post.pk}),
             {
                 'title': self.pub_post.title,
                 'body': str(self.pub_post.body) + " updated"
@@ -467,7 +467,7 @@ class PostUpdateTest(MessagesTestMixin, PostPopulatedTestCase):
         self.client.force_login(self.user1)
         updated_body = str(self.pub_post.body) + " updated"
         response = self.client.post(
-            reverse('post_update', kwargs={'pk': self.pub_post.pk}),
+            reverse('blog:update', kwargs={'pk': self.pub_post.pk}),
             {
                 'title': self.pub_post.title,
                 'body': updated_body
@@ -480,7 +480,7 @@ class PostUpdateTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_update_success_message(self):
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_update', kwargs={'pk': self.pub_post.pk}),
+            reverse('blog:update', kwargs={'pk': self.pub_post.pk}),
             {
                 'title': self.pub_post.title,
                 'body': str(self.pub_post.body) + " updated"
@@ -494,7 +494,7 @@ class PostUpdateTest(MessagesTestMixin, PostPopulatedTestCase):
         og_body = str(self.draft_post2.body)
         updated_body = og_body + " updated"
         response = self.client.post(
-            reverse('post_update', kwargs={'pk': self.draft_post2.pk}),
+            reverse('blog:update', kwargs={'pk': self.draft_post2.pk}),
             {
                 'title': self.draft_post2.title,
                 'body': updated_body
@@ -509,7 +509,7 @@ class PostUpdateTest(MessagesTestMixin, PostPopulatedTestCase):
     def test_cannot_update_another_users_post_message(self):
         self.client.force_login(self.user1)
         response = self.client.post(
-            reverse('post_update', kwargs={'pk': self.draft_post2.pk}),
+            reverse('blog:update', kwargs={'pk': self.draft_post2.pk}),
             {
                 'title': self.draft_post2.title,
                 'body': str(self.draft_post2.body) + " updated"
@@ -519,14 +519,14 @@ class PostUpdateTest(MessagesTestMixin, PostPopulatedTestCase):
         self.assertMessages(response, [Message(messages.ERROR, "Non hai le autorizzazioni necessarie per modificare questo post")])
 
     def test_update_unauth_redirects_to_login(self):
-        response = self.client.get(reverse('post_update', kwargs={'pk': self.pub_post.pk}))
+        response = self.client.get(reverse('blog:update', kwargs={'pk': self.pub_post.pk}))
         self.assertEqual(response.status_code, 302)
 
     def test_update_post_adding_tag(self):
         self.client.force_login(self.user1)
         tag_name = 'tag 1'
         response = self.client.post(
-            reverse('post_update', kwargs={'pk': self.pub_post.pk}),
+            reverse('blog:update', kwargs={'pk': self.pub_post.pk}),
             {
                 'title': self.pub_post.title,
                 'body': self.pub_post.body,
@@ -541,7 +541,7 @@ class PostUpdateTest(MessagesTestMixin, PostPopulatedTestCase):
         self.client.force_login(self.user1)
         tag_name = 'tag 1'
         response = self.client.post(
-            reverse('post_update', kwargs={'pk': self.post_tag.pk}),
+            reverse('blog:update', kwargs={'pk': self.post_tag.pk}),
             {
                 'title': self.post_tag.title,
                 'body': self.post_tag.body,
@@ -561,19 +561,19 @@ class PostCreateTest(MessagesTestMixin, TestCase):
 
     def test_create_view_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(reverse('post_create'))
+        response = self.client.get(reverse('blog:create'))
         self.assertEqual(response.status_code, 200)
 
     def test_create_view_template(self):
         self.client.force_login(self.user)
-        response = self.client.get(reverse('post_create'))
+        response = self.client.get(reverse('blog:create'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'blog/post_create.html')
 
     def test_create_view_post(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
                 'title': 'New post title',
                 'body': 'New post body'
@@ -584,7 +584,7 @@ class PostCreateTest(MessagesTestMixin, TestCase):
     def test_create_has_effect(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
                 'title': 'New post title',
                 'body': 'New post body'
@@ -596,7 +596,7 @@ class PostCreateTest(MessagesTestMixin, TestCase):
     def test_create_redirect_correct_page(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
                 'title': 'New post title',
                 'body': 'New post body'
@@ -609,7 +609,7 @@ class PostCreateTest(MessagesTestMixin, TestCase):
     def test_create_post_as_draft(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
                 'title': 'New post title',
                 'body': 'New post body',
@@ -623,7 +623,7 @@ class PostCreateTest(MessagesTestMixin, TestCase):
     def test_create_post_as_draft_message(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
                 'title': 'New post title',
                 'body': 'New post body',
@@ -637,7 +637,7 @@ class PostCreateTest(MessagesTestMixin, TestCase):
     def test_create_post_with_author(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
                 'title': 'New post title',
                 'body': 'New post body',
@@ -651,7 +651,7 @@ class PostCreateTest(MessagesTestMixin, TestCase):
     def test_create_post_and_publish(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
                 'title': 'New post title',
                 'body': 'New post body',
@@ -665,7 +665,7 @@ class PostCreateTest(MessagesTestMixin, TestCase):
     def test_create_post_and_publish_message(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
                 'title': 'New post title',
                 'body': 'New post body',
@@ -679,7 +679,7 @@ class PostCreateTest(MessagesTestMixin, TestCase):
     def test_create_post_and_program(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
                 'title': 'New post title',
                 'body': 'New post body',
@@ -689,12 +689,12 @@ class PostCreateTest(MessagesTestMixin, TestCase):
         self.assertEqual(response.status_code, 302)
         post = Post.objects.first()
         self.assertTrue(post.is_draft())
-        self.assertEqual(response.url, reverse('post_change_date', kwargs={'pk': post.pk}))
+        self.assertEqual(response.url, reverse('blog:change_date', kwargs={'pk': post.pk}))
 
     def test_create_post_and_program_message(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
                 'title': 'New post title',
                 'body': 'New post body',
@@ -705,14 +705,14 @@ class PostCreateTest(MessagesTestMixin, TestCase):
         self.assertMessages(response, [Message(messages.INFO, "Se decidi di annullare questa operazione, il post verrà salvato come bozza")])
 
     def test_create_unauth_redirects_to_login(self):
-        response = self.client.get(reverse('post_create'))
+        response = self.client.get(reverse('blog:create'))
         self.assertEqual(response.status_code, 302)
 
     def test_create_post_with_tag(self):
         self.client.force_login(self.user)
         tag_name = 'tag 1'
         response = self.client.post(
-            reverse('post_create'),
+            reverse('blog:create'),
             {
             'title': 'New post title',
             'body': 'New post body',

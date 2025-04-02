@@ -18,21 +18,21 @@
   <div class="btn-group post_actions">
     {% if user.is_authenticated %}
       {% if not post.author or post.author == user %}
-        <a href="{% url 'post_update' post.pk %}" class="btn btn-light">
+        <a href="{% url 'blog:update' post.pk %}" class="btn btn-light">
           Modifica
         </a>
         {% if not post.is_published %}
-          <form action="{% url "post_publish" post.pk %}" method="post" class="w-100">
+          <form action="{% url "blog:publish" post.pk %}" method="post" class="w-100">
             {% csrf_token %}
             <button type="submit" class="btn btn-light w-100">
               Pubblica
             </button>
           </form>
-          <a href="{% url "post_change_date" post.pk %}" class="btn btn-light">
+          <a href="{% url "blog:change_date" post.pk %}" class="btn btn-light">
             Programma
           </a>
         {% endif %}
-        <a href="{% url 'post_delete' post.pk %}" class="btn btn-danger">
+        <a href="{% url 'blog:delete' post.pk %}" class="btn btn-danger">
           Elimina
         </a>
       {% endif %}

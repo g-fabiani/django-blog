@@ -158,7 +158,7 @@ class PostCreateView(CustomLoginRequiredMixin, CreateView):
             message = "Se decidi di annullare questa operazione, il post verrà salvato come bozza"
             message_level = messages.INFO
             self.success_url = reverse(
-                'post_change_date',
+                'blog:change_date',
                 kwargs={'pk': form.instance.pk}
                 )
 
@@ -189,7 +189,7 @@ class PostCreateView(CustomLoginRequiredMixin, CreateView):
 class PostDeleteView(PostPermissionMixin, DeleteView):
     model = Post
     template_name = "blog/post_delete.html"
-    success_url = reverse_lazy('posts')
+    success_url = reverse_lazy('blog:list')
 
     def __init__(self, **kwargs: Any) -> None:
         self.verb = "eliminare"
