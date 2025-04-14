@@ -1,5 +1,6 @@
 from django.urls import path
 from . views import PostListView, PostDetailView, PostUpdateView, PostCreateView, PostDeleteView, PostPublishView, PostChangeDateView
+from . feeds import RssPostsFeed
 
 app_name = 'blog'
 urlpatterns = [
@@ -10,4 +11,5 @@ urlpatterns = [
     path('post/<int:pk>/delete', PostDeleteView.as_view(), name="delete"),
     path('post/<int:pk>/publish', PostPublishView.as_view(), name="publish"),
     path('post/<int:pk>/change_date', PostChangeDateView.as_view(), name="change_date"),
+    path('feed/rss', RssPostsFeed(), name="feed_rss")
 ]

@@ -31,3 +31,8 @@ Django-blog is a Django application for publishing a blog. Supports creating pos
     ```
     DJANGO_BLOG_PAGINATE_BY = 6
     ```
+5. Set title and description for rss feed adding to your settings:
+    ```
+    DJANGO_BLOG_FEED_TITLE = "My custom title"
+    DJANGO_BLOG_FEED_DESCRIPTION = "My custom description"
+    ```

@@ -1,0 +1,4 @@
+{% if obj.subtitle %}
+<p><strong>{{ obj.subtitle }}</strong></p>
+{% endif %}
+{{ obj.body | safe | truncatewords_html:50 }}
