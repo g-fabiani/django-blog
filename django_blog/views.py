@@ -58,7 +58,8 @@ class PostListView(ListView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context['title'] = "Blog"
-        context['tags'] = Tag.objects.all()
+        # Display only tags used in at least one published post
+        context['tags'] = Tag.objects.filter(post__pub_date__lte=now()).distinct().order_by('name');
         return context
 
     def get_queryset(self) -> QuerySet[Any]:
