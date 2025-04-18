@@ -723,3 +723,13 @@ class PostCreateTest(MessagesTestMixin, TestCase):
         post = Post.objects.first()
         tag = Tag.objects.get(name=tag_name)
         self.assertEqual(post.tags.first().pk, tag.pk)
+
+
+class FeedRssTest(TestCase):
+    def test_rss_view_by_name(self):
+        response = self.client.get(reverse('blog:feed_rss'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_rss_view_by_url(self):
+        response = self.client.get('/blog/feed/rss/')
+        self.assertEqual(response.status_code, 200)
