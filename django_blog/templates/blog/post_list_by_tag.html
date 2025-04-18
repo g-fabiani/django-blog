@@ -1,0 +1,29 @@
+{% extends "blog/base.html" %}
+{% block content %}
+  <h1>Tag: {{ tag }}</h1>
+  {% if posts %}
+    <ul>
+      {% for post in posts %}
+        <li>
+          <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    Non ci sono post
+  {% endif %}
+  {% if is_paginated %}
+    <ul class="pagination">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous page</a>
+        </li>
+      {% endif %}
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next page</a>
+        </li>
+      {% endif %}
+    </ul>
+  {% endif %}
+{% endblock content %}
