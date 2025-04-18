@@ -248,7 +248,7 @@ class PostListByTagView(ListView):
         pass
 
     def get_queryset(self, **kwargs):
-        return self.model.published_objects.filter(tags__pk=self.kwargs['pk'])
+        return self.model.published_objects.filter(tags__pk=self.kwargs['pk']).order_by('-pub_date')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
