@@ -802,3 +802,12 @@ class PostByTagViewTest(PostPopulatedTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertQuerySetEqual(response.context["posts"], [self.pub_post3, self.pub_post2, self.pub_post])
         self.assertEqual(response.context['tag'], self.tag2)
+
+class FeedRssTest(TestCase):
+    def test_rss_view_by_name(self):
+        response = self.client.get(reverse('blog:feed_rss'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_rss_view_by_url(self):
+        response = self.client.get('/blog/feed/rss/')
+        self.assertEqual(response.status_code, 200)
