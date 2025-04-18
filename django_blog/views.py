@@ -235,3 +235,22 @@ class PostChangeDateView(PostPermissionMixin, UserPassesTestMixin, UpdateView):
         """It should be possible to change date only for posts not already published"""
         if super().test_func():
             return not self.object.is_published()
+
+
+class PostListByTagView(ListView):
+    model = Post
+    template_name = "blog/post_list_by_tag.html"
+    context_object_name = "posts"
+    paginate_by = 4
+    try:
+        paginate_by = settings.DJANGO_BLOG_PAGINATE_BY
+    except AttributeError:
+        pass
+
+    def get_queryset(self, **kwargs):
+        return self.model.published_objects.filter(tags__pk=self.kwargs['pk'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tag'] = Tag.objects.get(pk=self.kwargs['pk'])
+        return context
