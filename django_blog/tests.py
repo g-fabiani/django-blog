@@ -723,3 +723,82 @@ class PostCreateTest(MessagesTestMixin, TestCase):
         post = Post.objects.first()
         tag = Tag.objects.get(name=tag_name)
         self.assertEqual(post.tags.first().pk, tag.pk)
+
+class PostByTagViewTest(PostPopulatedTestCase):
+    def setUp(self):
+        super().setUp()
+        # Add some other published posts
+        self.pub_post2 = Post.objects.create(
+            title="Published post 2",
+            subtitle="Subtitle of published post 2",
+            body="Body of published post 2",
+            pub_date=now() - datetime.timedelta(days=1)
+        )
+        self.pub_post3 = Post.objects.create(
+            title="Published post 3",
+            subtitle="Subtitle of published post 3",
+            body="Body of published post 3",
+            pub_date=now() - datetime.timedelta(days=1)
+        )
+
+        # Add some tags to posts
+        self.tag1 = Tag.objects.create(name="tag 1")
+        self.tag2 = Tag.objects.create(name="tag 2")
+        self.tag3 = Tag.objects.create(name="tag 3")
+        self.tag4 = Tag.objects.create(name="tag 4")
+        self.tag5 = Tag.objects.create(name="tag 5")
+
+        self.pub_post.tags.add(self.tag1)
+        self.pub_post.tags.add(self.tag2)
+
+        self.pub_post2.tags.add(self.tag2)
+
+        self.pub_post3.tags.add(self.tag2)
+
+        self.future_post.tags.add(self.tag3)
+        self.future_post.tags.add(self.tag1)
+
+        self.draft_post.tags.add(self.tag5)
+
+    def test_post_list_view_tags_queryset(self):
+        """only tags associated with published posts"""
+        response = self.client.get(reverse('blog:list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerySetEqual(response.context['tags'], [self.tag1, self.tag2])
+
+    def test_post_list_by_tag_view_url_by_name(self):
+        response = self.client.get(reverse('blog:list_by_tag', kwargs={'pk': self.tag1.pk}))
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_list_by_tag_view_url_location(self):
+        response = self.client.get(f'/blog/tag/{self.tag1.pk}/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_list_by_tag_view_template(self):
+        response = self.client.get(reverse('blog:list_by_tag', kwargs={'pk': self.tag1.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed('blog/post_list_by_tag.html')
+
+    def test_post_list_by_tag_queryset(self):
+        response = self.client.get(reverse('blog:list_by_tag', kwargs={'pk': self.tag1.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerySetEqual(response.context["posts"], [self.pub_post])
+        self.assertEqual(response.context['tag'], self.tag1)
+
+    def test_post_list_by_tag_empty_queryset_unpublished(self):
+        response = self.client.get(reverse('blog:list_by_tag', kwargs={"pk": self.tag3.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerySetEqual(response.context['posts'], [])
+        self.assertEqual(response.context['tag'], self.tag3)
+
+    def test_post_list_by_tag_empty_queryset_unused(self):
+        response = self.client.get(reverse('blog:list_by_tag', kwargs={'pk': self.tag4.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerySetEqual(response.context["posts"], [])
+        self.assertEqual(response.context['tag'], self.tag4)
+
+    def test_post_list_by_tag_queryset_multiple_posts(self):
+        response = self.client.get(reverse('blog:list_by_tag', kwargs={"pk": self.tag2.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerySetEqual(response.context["posts"], [self.pub_post3, self.pub_post2, self.pub_post])
+        self.assertEqual(response.context['tag'], self.tag2)
