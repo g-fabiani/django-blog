@@ -774,6 +774,10 @@ class PostByTagViewTest(PostPopulatedTestCase):
         response = self.client.get(f'/blog/tag/{self.tag1.pk}/')
         self.assertEqual(response.status_code, 200)
 
+    def test_post_list_by_tag_view_404(self):
+        response = self.client.get(reverse('blog:list_by_tag', kwargs={'pk': 100}))
+        self.assertEqual(response.status_code, 404)
+
     def test_post_list_by_tag_view_template(self):
         response = self.client.get(reverse('blog:list_by_tag', kwargs={'pk': self.tag1.pk}))
         self.assertEqual(response.status_code, 200)

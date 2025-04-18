@@ -9,7 +9,7 @@ from django.utils.timezone import now
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, Http404
 from django.conf import settings
 from . models import Post, Tag
 from . forms import PostUpdateForm, PostCreateForm, PostChangeDateForm
@@ -252,5 +252,8 @@ class PostListByTagView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['tag'] = Tag.objects.get(pk=self.kwargs['pk'])
+        try:
+            context['tag'] = Tag.objects.get(pk=self.kwargs['pk'])
+        except Tag.DoesNotExist:
+            raise Http404
         return context
